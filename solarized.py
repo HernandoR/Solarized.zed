@@ -16,6 +16,8 @@ color values — see docs/plans/adr-0001-adopt-vscode-export-2026-06-13.md.
 
 import json
 
+from coloraide import Color
+
 solarized = {
     "base03": "#002b36",  # dark background
     "base02": "#073642",  # dark background highlights
@@ -35,17 +37,55 @@ solarized = {
     "green": "#859900",
 }
 
-# VSCode export adds these intermediate shades based on the user's personal tweaks
-# (adopted via ADR-0001)
-vsc_intermediates = {
-    "bg0": "#00212b",  # even darker than base03 — sidebars, status bar, dropdowns
-    "bg_input": "#003847",  # between base03 and base02 — input fields, activity bar
-    "bg_tab": "#004052",  # tab bar / inactive tab backgrounds
-    "bg_focus": "#005a6f",  # active/focus list item backgrounds
-    "bg_sel": "#274642",  # selection background
-    "bg_title": "#002c39",  # title bar
-    "bg_tab_active": "#002b37",  # active tab (diff ~1 from base03)
+# ---------------------------------------------------------------------------
+# Derived surface shades (ADR-0003)
+#
+# ADR-0001 introduced seven hand-tuned intermediate background hex values, which
+# made the chrome look "fragmented" (too many near-identical surface tones).
+# They are replaced by a computed ladder: every background surface shares ONE
+# chroma (the variant's background hue) and differs only in CIELAB lightness, on
+# a uniform step grid — so the contrast between any two surfaces is consistent.
+# Foreground/content tones and the 8 accents stay canonical Solarized.
+# ---------------------------------------------------------------------------
+
+
+def _lab(hex_color):
+    c = Color(hex_color).convert("lab")
+    return c["lightness"], c["a"], c["b"]
+
+
+def _from_lab(lightness, a, b):
+    return Color("lab", [lightness, a, b]).convert("srgb").to_string(hex=True)
+
+
+# Light backgrounds run a touch warmer (more b*/yellow) than canonical so the
+# base reads as warm cream, not stark white. +3 keeps every tone inside sRGB.
+LIGHT_WARM = 3.0
+
+
+def warm(hex_color):
+    """Nudge a color warmer (more b*) — used to cream up the light base tones."""
+    lightness, a, b = _lab(hex_color)
+    return _from_lab(lightness, a, b + LIGHT_WARM)
+
+
+# The canvas (editor) and highlight (current line) keep the canonical base03/
+# base02 (dark) and base3/base2 (light). Only the three intermediate surface
+# roles are derived: each shares the variant's background chroma and differs
+# only in CIELAB lightness, on a uniform ladder bracketing the canvas.
+_SURFACE_ANCHOR = {"dark": "#002b36", "light": "#fdf6e3"}
+_SURFACE_L = {
+    "dark": {"recede": 10, "field": 25, "emphasis": 32},
+    "light": {"recede": 91, "field": 88, "emphasis": 82},
 }
+
+
+def surface_shades(variant):
+    """Derived intermediate surfaces: held chroma, uniform lightness ladder."""
+    _, a, b = _lab(_SURFACE_ANCHOR[variant])
+    if variant == "light":
+        b += LIGHT_WARM
+    return {role: _from_lab(level, a, b) for role, level in _SURFACE_L[variant].items()}
 
 
 def solarized_theme(palette):
@@ -156,16 +196,12 @@ def solarized_theme(palette):
         "editor.line_number": palette["fg2"],
         "editor.subheader.background": palette["bg1"],
         "editor.wrap_guide": palette["bg2"],
-        "element.active": palette["bg_focus"]
-        if "bg_focus" in palette
-        else palette["bg2"],
-        "element.background": palette["bg_input"]
-        if "bg_input" in palette
-        else palette["bg2"],
+        "element.active": palette["surf_emphasis"],
+        "element.background": palette["surf_field"],
         "element.disabled": palette["bg2"],
         "element.hover": palette["bg2"],
         "element.selected": palette["blue"] + "66",
-        "elevated_surface.background": palette.get("bg0", palette["bg1"]),
+        "elevated_surface.background": palette["surf_recede"],
         "error": palette["red"],
         "error.background": palette["bg1"],
         "error.border": palette["red"],
@@ -204,7 +240,7 @@ def solarized_theme(palette):
         "modified.border": palette["yellow"],
         "pane.focused_border": palette["blue"],
         "pane_group.border": palette["fg1"],
-        "panel.background": palette.get("bg0", palette["bg2"]),
+        "panel.background": palette["surf_recede"],
         "panel.focused_border": palette["blue"],
         "panel.indent_guide": palette["fg2"],
         "panel.indent_guide_active": palette["fg1"],
@@ -222,15 +258,15 @@ def solarized_theme(palette):
         "scrollbar.track.background": None,
         "scrollbar.track.border": palette["bg2"],
         "search.match_background": palette["yellow"] + "99",
-        "status_bar.background": palette.get("bg0", palette["bg2"]),
+        "status_bar.background": palette["surf_recede"],
         "success": palette["green"],
         "success.background": palette["bg1"] + "00",
         "success.border": palette["green"],
         "surface.background": palette["bg1"],
         "syntax": syntax,
-        "tab.active_background": palette.get("bg_tab_active", palette["bg1"]),
-        "tab.inactive_background": palette.get("bg_tab", palette["bg2"]),
-        "tab_bar.background": palette.get("bg_tab", palette["bg2"]),
+        "tab.active_background": palette["bg1"],
+        "tab.inactive_background": palette["surf_field"],
+        "tab_bar.background": palette["surf_field"],
         "terminal.ansi.background": palette["bg1"],
         "terminal.ansi.black": palette["base02"],
         "terminal.ansi.blue": palette["blue"],
@@ -268,8 +304,8 @@ def solarized_theme(palette):
         "text.disabled": palette["fg2"],
         "text.muted": palette["fg1"],
         "text.placeholder": palette["fg1"],
-        "title_bar.background": palette.get("bg_title", palette["bg2"]),
-        "title_bar.inactive_background": palette.get("bg_title", palette["bg2"]),
+        "title_bar.background": palette["bg1"],
+        "title_bar.inactive_background": palette["bg1"],
         "toolbar.background": palette["bg1"],
         "unreachable": palette["violet"],
         "unreachable.background": palette["bg1"],
@@ -285,17 +321,19 @@ def solarized_theme(palette):
 # Dark
 # =========================================================================
 
+_dark = surface_shades("dark")
 solarized.update(
     {
-        "bg1": solarized["base03"],  # background
-        "bg2": solarized["base02"],  # background highlights
+        "bg1": solarized["base03"],  # editor / canvas
+        "bg2": solarized["base02"],  # active line / hover highlight
         "fg1": solarized["base0"],  # body text / default code / primary content
         "fg2": solarized["base01"],  # comments / secondary content
         "fg3": solarized["base1"],  # optional emphasized content
+        "surf_recede": _dark["recede"],  # panels, status bar, popovers (sunken)
+        "surf_field": _dark["field"],  # inputs, tab bar, inactive tabs
+        "surf_emphasis": _dark["emphasis"],  # active / focused list item
     }
 )
-# Merge VSCode intermediate shades for the dark variant
-solarized.update(vsc_intermediates)
 
 solarized_dark = {
     "appearance": "dark",
@@ -308,18 +346,19 @@ print("Added Solarized Dark")
 # Light
 # =========================================================================
 
+_light = surface_shades("light")
 solarized.update(
     {
-        "bg1": solarized["base3"],  # background
-        "bg2": solarized["base2"],  # background highlights
+        "bg1": warm(solarized["base3"]),  # editor / canvas (warm cream, not white)
+        "bg2": warm(solarized["base2"]),  # active line / hover highlight
         "fg1": solarized["base00"],  # body text / default code / primary content
         "fg2": solarized["base1"],  # comments / secondary content
         "fg3": solarized["base01"],  # optional emphasized content
+        "surf_recede": _light["recede"],  # panels, status bar, popovers
+        "surf_field": _light["field"],  # inputs, tab bar, inactive tabs
+        "surf_emphasis": _light["emphasis"],  # active / focused list item
     }
 )
-# Remove VSCode-specific intermediate keys for the light variant
-for k in vsc_intermediates:
-    solarized.pop(k, None)
 
 solarized_light = {
     "appearance": "light",

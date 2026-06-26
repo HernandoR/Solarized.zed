@@ -1,7 +1,12 @@
 # ADR-0001: Adopt VSCode Export as Source of Truth for Zed Theme Colors
 
-- Status: Accepted
+- Status: Accepted (surface shades superseded by
+  [ADR-0003](adr-0003-computed-surface-ladder-2026-06-26.md))
 - Date: 2026-06-13
+
+> Note: the syntax/hue mapping below still stands. The seven intermediate
+> **background** shades this ADR introduced were later replaced by a computed
+> CIELAB lightness ladder — see ADR-0003.
 
 ## Context
 

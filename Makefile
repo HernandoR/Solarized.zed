@@ -1,2 +1,2 @@
 build:
-	@python solarized.py
+	@uv run python solarized.py

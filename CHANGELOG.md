@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-06-26
+
+### Changed
+
+- Surface shades are now computed from a CIELAB lightness ladder instead of
+  seven hand-tuned intermediate hex values, so the chrome no longer looks
+  fragmented and every surface-to-surface contrast step is uniform. Editor and
+  current-line stay canonical base03/base02; panels/inputs/tabs/focus are
+  derived on a held chroma. The light variant gains a matching surface hierarchy
+  and a warm-cream base (not stark white). See ADR-0003 (Proposed).
+
+### Added
+
+- Project is now managed with `uv` (`pyproject.toml`, `uv.lock`); `make` runs
+  `uv run python solarized.py`. Runtime dependency: `coloraide` for color math.
+
 ## [0.9.0] - 2026-06-26
 
 ### Changed
