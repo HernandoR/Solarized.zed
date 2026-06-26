@@ -58,6 +58,18 @@ def _from_lab(lightness, a, b):
     return Color("lab", [lightness, a, b]).convert("srgb").to_string(hex=True)
 
 
+def _lch(hex_color):
+    c = Color(hex_color).convert("lch")
+    return c["lightness"], c["chroma"], c["hue"]
+
+
+def _from_lch(lightness, chroma, hue):
+    # Negative chroma is meaningless; the darkest surface can ask for a chroma
+    # the very-dark end of sRGB can't hold, so let coloraide gamut-map on output.
+    c = Color("lch", [lightness, max(chroma, 0.0), hue])
+    return c.convert("srgb").to_string(hex=True)
+
+
 # Light backgrounds run a touch warmer (more b*/yellow) than canonical so the
 # base reads as warm cream, not stark white. +3 keeps every tone inside sRGB.
 LIGHT_WARM = 3.0
@@ -71,21 +83,37 @@ def warm(hex_color):
 
 # The canvas (editor) and highlight (current line) keep the canonical base03/
 # base02 (dark) and base3/base2 (light). Only the three intermediate surface
-# roles are derived: each shares the variant's background chroma and differs
-# only in CIELAB lightness, on a uniform ladder bracketing the canvas.
+# roles are derived: each holds the variant's background HUE and steps CIELAB
+# lightness on a uniform ladder bracketing the canvas.
+#
+# Chroma is NOT held flat. The first ADR-0003 cut pinned absolute a*/b* and only
+# moved L*, which left the lighter surfaces (field/emphasis) 25–40% less colorful
+# than canonical at their lightness — they read "灰灰的", washed-out gray-blue.
+# Canonical Solarized (and the ADR-0001 hand-tuned ladder it replaced) instead
+# let chroma *rise* as lightness moves toward mid-gray (base03 C*16 → base02 C*17,
+# the hand ladder ~+0.5 C* per L*). So chroma is now a signed linear function of
+# the lightness step from the canvas anchor, restoring that richness. The slope
+# is eye-tunable; dark +0.5 reproduces the hand-tuned ladder, light a gentle −0.2
+# so deeper surfaces read as richer cream rather than gray.
 _SURFACE_ANCHOR = {"dark": "#002b36", "light": "#fdf6e3"}
 _SURFACE_L = {
     "dark": {"recede": 10, "field": 25, "emphasis": 32},
     "light": {"recede": 91, "field": 88, "emphasis": 82},
 }
+_SURFACE_CHROMA_SLOPE = {"dark": 0.5, "light": -0.2}  # C* gained per L* off the anchor
 
 
 def surface_shades(variant):
-    """Derived intermediate surfaces: held chroma, uniform lightness ladder."""
-    _, a, b = _lab(_SURFACE_ANCHOR[variant])
+    """Derived intermediate surfaces: held hue, lightness ladder, chroma rising toward mid-gray."""
+    anchor = _SURFACE_ANCHOR[variant]
     if variant == "light":
-        b += LIGHT_WARM
-    return {role: _from_lab(level, a, b) for role, level in _SURFACE_L[variant].items()}
+        anchor = warm(anchor)
+    l0, c0, hue = _lch(anchor)
+    slope = _SURFACE_CHROMA_SLOPE[variant]
+    return {
+        role: _from_lch(level, c0 + slope * (level - l0), hue)
+        for role, level in _SURFACE_L[variant].items()
+    }
 
 
 def solarized_theme(palette):

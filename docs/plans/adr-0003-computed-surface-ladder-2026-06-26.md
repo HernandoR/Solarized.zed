@@ -1,7 +1,8 @@
 # ADR-0003: Compute UI Surface Shades from a CIELAB Lightness Ladder
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-06-26
+- Update (2026-06-26): chroma is no longer held flat — see *Update: rising chroma*.
 
 ## Context
 
@@ -53,7 +54,8 @@ Concretely, in `solarized.py` (now run under `uv`, with `coloraide`):
 3. **`surface_shades(variant)`** derives the three intermediate surface roles —
    `recede` (panels, status bar, popovers), `field` (inputs, tab bar, inactive
    tabs), `emphasis` (active/focused item) — by holding the variant's background
-   chroma and setting CIELAB lightness from a uniform grid:
+   hue and setting CIELAB lightness from a uniform grid (chroma handling refined
+   in *Update: rising chroma* below):
    - dark: recede 10, (canvas 15, highlight 20 = canonical base03/base02), field 25, emphasis 32
    - light: (canvas 97, highlight ≈92 = warmed base3/base2), recede 91, field 88, emphasis 82
 
@@ -91,3 +93,29 @@ assignments are expected to be tuned by eye in Zed before this is accepted.
   strictly canonical monotone ramp.
 - `LIGHT_WARM` is capped near +3 b\* before tones leave sRGB; more cream than
   that needs gamut mapping and may shift hue.
+
+## Update: rising chroma (held hue, not held chroma)
+
+The first cut of this ADR pinned the **absolute** CIELAB `a*`/`b*` of the canvas
+anchor and moved only `L*`. In Zed the lighter surfaces read **"灰灰的"** —
+washed-out gray-blue. The cause was perceptual: saturation ≈ `C*/L*`, so holding
+chroma flat at base03's level (`C* ≈ 16`) while raising lightness drops perceived
+colorfulness sharply. Measured against the ADR-0001 hand-tuned ladder at equal
+lightness, `field` lost ~25% chroma and `emphasis` ~40%.
+
+Canonical Solarized does the opposite: chroma **rises** with lightness toward
+mid-gray (`base03` C\*16 → `base02` C\*17; the ADR-0001 hand ladder rose ~0.5 C\*
+per L\*). The fix keeps the uniform lightness ladder but works in **LCh**: hold
+the canvas **hue**, and set each surface's chroma as a signed linear function of
+its lightness step off the anchor —
+`C* = C*_anchor + slope · (L* − L*_anchor)`, with `_SURFACE_CHROMA_SLOPE` of
+**+0.5 (dark)** and **−0.2 (light)**. The dark slope reproduces the hand-tuned
+ladder (`field #014251`, `emphasis #015366` ≈ the old `#004052`/`#005a6f`); the
+gentle negative light slope makes deeper surfaces read as richer cream, not gray.
+The slope is an eye-tunable knob, like the lightness grid and `LIGHT_WARM`.
+
+This supersedes consequence "Holding chroma means surfaces don't reproduce
+Solarized's natural toward-mid desaturation" above — that trade-off is no longer
+taken; chroma now follows the canonical toward-mid rise. The darkest surface
+(`recede`, dark) can request a chroma the very-dark end of sRGB can't hold, so
+`_from_lch` lets coloraide gamut-map on output.
