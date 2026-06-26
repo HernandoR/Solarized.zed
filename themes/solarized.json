@@ -184,7 +184,7 @@
           },
           "hint": {
             "color": "#586e75",
-            "background_color": "#073642"
+            "background_color": "#93a1a120"
           },
           "keyword": {
             "color": "#859900"
@@ -497,7 +497,7 @@
           },
           "hint": {
             "color": "#93a1a1",
-            "background_color": "#eee8d5"
+            "background_color": "#586e7520"
           },
           "keyword": {
             "color": "#859900"

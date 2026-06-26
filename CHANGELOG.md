@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-06-26
+
+### Changed
+
+- Inlay hint background is now a semi-transparent `fg3` tint instead of opaque
+  `bg2`, so the chip stays distinguishable over every line background —
+  including the active line (which is `bg2`) and selections
+
 ## [0.8.0] - 2026-06-26
 
 ### Fixed

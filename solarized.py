@@ -81,8 +81,14 @@ def solarized_theme(palette):
         "function": {"color": palette["blue"]},
         # Inlay hints read both fg and bg from syntax.hint (Zed PR #36219 moved
         # them off the top-level hint.* status keys). background_color is what
-        # the inlay_hints.show_background setting renders.
-        "hint": {"color": palette["fg2"], "background_color": palette["bg2"]},
+        # the inlay_hints.show_background setting renders. It is a semi-transparent
+        # fg3 tint (not an opaque color) so the chip stays distinguishable over
+        # ANY line background — including the active line and selections, where an
+        # opaque shade would blend in. fg3 lightens on dark / darkens on light.
+        "hint": {
+            "color": palette["fg2"],
+            "background_color": palette["fg3"] + "20",
+        },
         "keyword": {"color": palette["green"]},
         "label": {"color": palette["blue"]},
         "link_text": {"color": palette["blue"], "font_style": "italic"},
