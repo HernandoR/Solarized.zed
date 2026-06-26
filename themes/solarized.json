@@ -183,7 +183,8 @@
             "color": "#268bd2"
           },
           "hint": {
-            "color": "#586e75"
+            "color": "#586e75",
+            "background_color": "#073642"
           },
           "keyword": {
             "color": "#859900"
@@ -495,7 +496,8 @@
             "color": "#268bd2"
           },
           "hint": {
-            "color": "#93a1a1"
+            "color": "#93a1a1",
+            "background_color": "#eee8d5"
           },
           "keyword": {
             "color": "#859900"

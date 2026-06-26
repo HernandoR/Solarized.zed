@@ -21,10 +21,10 @@ solarized = {
     "base02": "#073642",  # dark background highlights
     "base01": "#586e75",  # dark comments / secondary content; light optional emphasized content
     "base00": "#657b83",  # light body text / default code / primary content
-    "base0": "#839496",   # dark body text / default code / primary content
-    "base1": "#93a1a1",   # dark optional emphasized content; light comments / secondary content
-    "base2": "#eee8d5",   # light background highlights
-    "base3": "#fdf6e3",   # light background
+    "base0": "#839496",  # dark body text / default code / primary content
+    "base1": "#93a1a1",  # dark optional emphasized content; light comments / secondary content
+    "base2": "#eee8d5",  # light background highlights
+    "base3": "#fdf6e3",  # light background
     "yellow": "#b58900",
     "orange": "#cb4b16",
     "red": "#dc322f",
@@ -38,11 +38,11 @@ solarized = {
 # VSCode export adds these intermediate shades based on the user's personal tweaks
 # (adopted via ADR-0001)
 vsc_intermediates = {
-    "bg0":     "#00212b",  # even darker than base03 — sidebars, status bar, dropdowns
+    "bg0": "#00212b",  # even darker than base03 — sidebars, status bar, dropdowns
     "bg_input": "#003847",  # between base03 and base02 — input fields, activity bar
-    "bg_tab":  "#004052",  # tab bar / inactive tab backgrounds
+    "bg_tab": "#004052",  # tab bar / inactive tab backgrounds
     "bg_focus": "#005a6f",  # active/focus list item backgrounds
-    "bg_sel":  "#274642",   # selection background
+    "bg_sel": "#274642",  # selection background
     "bg_title": "#002c39",  # title bar
     "bg_tab_active": "#002b37",  # active tab (diff ~1 from base03)
 }
@@ -79,7 +79,10 @@ def solarized_theme(palette):
         "emphasis.strong": {"color": palette["blue"], "font_weight": 700},
         "enum": {"color": palette["orange"]},
         "function": {"color": palette["blue"]},
-        "hint": {"color": palette["fg2"]},
+        # Inlay hints read both fg and bg from syntax.hint (Zed PR #36219 moved
+        # them off the top-level hint.* status keys). background_color is what
+        # the inlay_hints.show_background setting renders.
+        "hint": {"color": palette["fg2"], "background_color": palette["bg2"]},
         "keyword": {"color": palette["green"]},
         "label": {"color": palette["blue"]},
         "link_text": {"color": palette["blue"], "font_style": "italic"},
@@ -147,8 +150,12 @@ def solarized_theme(palette):
         "editor.line_number": palette["fg2"],
         "editor.subheader.background": palette["bg1"],
         "editor.wrap_guide": palette["bg2"],
-        "element.active": palette["bg_focus"] if "bg_focus" in palette else palette["bg2"],
-        "element.background": palette["bg_input"] if "bg_input" in palette else palette["bg2"],
+        "element.active": palette["bg_focus"]
+        if "bg_focus" in palette
+        else palette["bg2"],
+        "element.background": palette["bg_input"]
+        if "bg_input" in palette
+        else palette["bg2"],
         "element.disabled": palette["bg2"],
         "element.hover": palette["bg2"],
         "element.selected": palette["blue"] + "66",
@@ -276,9 +283,9 @@ solarized.update(
     {
         "bg1": solarized["base03"],  # background
         "bg2": solarized["base02"],  # background highlights
-        "fg1": solarized["base0"],   # body text / default code / primary content
+        "fg1": solarized["base0"],  # body text / default code / primary content
         "fg2": solarized["base01"],  # comments / secondary content
-        "fg3": solarized["base1"],   # optional emphasized content
+        "fg3": solarized["base1"],  # optional emphasized content
     }
 )
 # Merge VSCode intermediate shades for the dark variant
@@ -297,10 +304,10 @@ print("Added Solarized Dark")
 
 solarized.update(
     {
-        "bg1": solarized["base3"],   # background
-        "bg2": solarized["base2"],   # background highlights
+        "bg1": solarized["base3"],  # background
+        "bg2": solarized["base2"],  # background highlights
         "fg1": solarized["base00"],  # body text / default code / primary content
-        "fg2": solarized["base1"],   # comments / secondary content
+        "fg2": solarized["base1"],  # comments / secondary content
         "fg3": solarized["base01"],  # optional emphasized content
     }
 )
