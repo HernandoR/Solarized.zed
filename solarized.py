@@ -167,11 +167,14 @@ def solarized_theme(palette):
         "hint": palette["fg2"] + "AA",
         "hint.background": palette["bg1"] + "00",
         "hint.border": palette["fg2"],
-        "icon": palette["fg1"],
+        # UI chrome icons use the brighter emphasized shade (fg3) for primary
+        # and fg1 for muted/placeholder, so file tree / tab icons stand out more
+        # against the background. Editor content uses its own keys and is unaffected.
+        "icon": palette["fg3"],
         "icon.accent": accents[0],
         "icon.disabled": palette["fg2"],
-        "icon.muted": palette["fg2"],
-        "icon.placeholder": palette["fg2"],
+        "icon.muted": palette["fg1"],
+        "icon.placeholder": palette["fg1"],
         "ignored": palette["fg2"],
         "ignored.background": palette["bg1"],
         "ignored.border": palette["fg2"],
@@ -240,11 +243,14 @@ def solarized_theme(palette):
         "terminal.bright_foreground": palette["fg3"],
         "terminal.dim_foreground": palette["fg2"],
         "terminal.foreground": palette["fg1"],
-        "text": palette["fg1"],
+        # UI chrome text (tab labels, panels, file tree, status bar) is brightened
+        # one notch for higher contrast: primary -> fg3, muted/placeholder -> fg1.
+        # Editor code uses "editor.foreground" and is left at the Solarized default.
+        "text": palette["fg3"],
         "text.accent": accents[0],
         "text.disabled": palette["fg2"],
-        "text.muted": palette["fg2"],
-        "text.placeholder": palette["fg2"],
+        "text.muted": palette["fg1"],
+        "text.placeholder": palette["fg1"],
         "title_bar.background": palette.get("bg_title", palette["bg2"]),
         "title_bar.inactive_background": palette.get("bg_title", palette["bg2"]),
         "toolbar.background": palette["bg1"],

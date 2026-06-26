@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-26
+
+### Changed
+
+- Brightened UI chrome text and icons (tab labels, file tree, panels, status
+  bar) for higher contrast against the background; editor/code colors unchanged
+
 ## [0.2.0] - 2025-06-26
 
 ### Added
