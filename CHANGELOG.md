@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-26
+
+### Fixed
+
+- Inlay hints are now muted gray and regular weight instead of bold light-blue.
+  `syntax.hint` drove the bold/blue look (Zed styles inlay hints via the syntax
+  `hint` key); set it to `fg2` with no `font_weight`
+
 ## [0.6.0] - 2026-06-26
 
 ### Fixed

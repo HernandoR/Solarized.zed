@@ -79,7 +79,7 @@ def solarized_theme(palette):
         "emphasis.strong": {"color": palette["blue"], "font_weight": 700},
         "enum": {"color": palette["orange"]},
         "function": {"color": palette["blue"]},
-        "hint": {"color": "#4f8297ff", "font_weight": 700},
+        "hint": {"color": palette["fg2"]},
         "keyword": {"color": palette["green"]},
         "label": {"color": palette["blue"]},
         "link_text": {"color": palette["blue"], "font_style": "italic"},
