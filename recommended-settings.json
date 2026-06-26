@@ -1,0 +1,88 @@
+{
+  "$schema": "https://zed.dev/schema/themes/v0.2.0.json",
+  "//": "Recommended Zed settings for best results with Solarized theme.",
+  "//": "Copy relevant sections into your ~/.config/zed/settings.json.",
+
+  "// semantic_token_rules": "Map LSP semantic token types to Solarized theme syntax keys.",
+  "//": "The theme already provides the palette; these rules tell the LSP",
+  "//": "how to map its fine-grained types to those syntax colors.",
+  "global_lsp_settings": {
+    "semantic_token_rules": [
+      {
+        "//": "Types & classes → orange (matching VSCode entity.name.class/namespace)",
+        "token_type": "class",
+        "style": ["syntax.type"]
+      },
+      {
+        "token_type": "namespace",
+        "style": ["syntax.type"]
+      },
+      {
+        "token_type": "interface",
+        "style": ["syntax.type"]
+      },
+      {
+        "token_type": "struct",
+        "style": ["syntax.type"]
+      },
+      {
+        "token_type": "type",
+        "style": ["syntax.type"]
+      },
+      {
+        "token_type": "typeParameter",
+        "style": ["syntax.type"]
+      },
+
+      {
+        "//": "Enums → orange (matching VSCode entity.name.class style)",
+        "token_type": "enum",
+        "style": ["syntax.enum", "syntax.type"]
+      },
+      {
+        "token_type": "enumMember",
+        "style": ["syntax.enum", "syntax.property", "syntax.variable"]
+      },
+
+      {
+        "//": "Functions & methods → blue (matching VSCode entity.name.function)",
+        "token_type": "function",
+        "style": ["syntax.function"]
+      },
+      {
+        "token_type": "method",
+        "style": ["syntax.function"]
+      },
+      {
+        "token_type": "macro",
+        "style": ["syntax.preproc", "syntax.function"]
+      },
+
+      {
+        "//": "Decorators / annotations → base1 (matching VSCode entity.other.attribute-name)",
+        "token_type": "decorator",
+        "style": ["syntax.attribute"]
+      },
+
+      {
+        "//": "Variables → blue (matching VSCode variable.language/variable.other)",
+        "token_type": "variable",
+        "style": ["syntax.variable"]
+      },
+      {
+        "token_type": "parameter",
+        "style": ["syntax.variable"]
+      },
+      {
+        "token_type": "property",
+        "style": ["syntax.property", "syntax.variable"]
+      },
+
+      {
+        "//": "Deprecated → dimmed and strikethrough",
+        "token_modifiers": ["deprecated"],
+        "foreground_color": "#586e7550"
+      }
+    ]
+  }
+}

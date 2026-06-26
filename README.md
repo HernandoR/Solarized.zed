@@ -6,6 +6,12 @@
 
 If you have any issues, no matter how small, please open an issue on [GitHub](https://github.com/harmtemolder/Solarized.zed/issues).
 
+## Recommended settings
+
+For best results with LSP semantic tokens (class names, namespaces, decorators, etc.),
+copy the relevant section from [`recommended-settings.json`](recommended-settings.json)
+into your `~/.config/zed/settings.json`.
+
 ## Develop
 
 - (I used `schema.py` to generate a list of properties from `schema.json`, but as long as <https://zed.dev/schema/themes/v0.2.0.json> is used in `solarized.py`, you don't have to repeat this)

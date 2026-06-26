@@ -68,7 +68,7 @@ def solarized_theme(palette):
         ]
     ]
     syntax = {
-        "attribute": {"color": palette["blue"]},
+        "attribute": {"color": palette["fg3"]},
         "boolean": {"color": palette["yellow"]},
         "comment": {"color": palette["fg2"], "font_style": "italic"},
         "comment.doc": {"color": palette["fg2"], "font_style": "italic"},
@@ -103,11 +103,11 @@ def solarized_theme(palette):
         "string.regex": {"color": palette["orange"]},
         "string.special": {"color": palette["orange"]},
         "string.special.symbol": {"color": palette["orange"]},
-        "tag": {"color": palette["red"]},
+        "tag": {"color": palette["blue"]},
         "text.literal": {"color": palette["cyan"]},
         "title": {"color": palette["orange"], "font_weight": 700},
-        "type": {"color": palette["yellow"]},
-        "variable": {"color": palette["fg1"]},
+        "type": {"color": palette["orange"]},
+        "variable": {"color": palette["blue"]},
         "variant": {"color": palette["blue"]},
     }
 
