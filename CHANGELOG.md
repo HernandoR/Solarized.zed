@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-26
+
+### Fixed
+
+- Ghost icon buttons (tabs, toolbars, panel headers) no longer float a filled
+  box over their surface at rest — `ghost_element.background` is now transparent
+  so icons only show a tint on hover/press; `ghost_element.active` is corrected
+  from a foreground gray to a blue tint. Filled controls (`element.*`) unchanged
+
 ## [0.5.0] - 2026-06-26
 
 ### Changed

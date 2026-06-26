@@ -156,9 +156,13 @@ def solarized_theme(palette):
         "error": palette["red"],
         "error.background": palette["bg1"],
         "error.border": palette["red"],
-        "ghost_element.active": palette["fg1"],
-        "ghost_element.background": palette.get("bg_input", palette["bg2"]),
-        "ghost_element.disabled": palette["fg2"],
+        # Ghost elements (icon buttons in tabs/toolbars/panels) must be
+        # transparent at rest so they don't float a filled box over the
+        # surface they sit on; they only show a tint on hover/active/select.
+        # (Filled controls — inputs, activity bar — use element.* instead.)
+        "ghost_element.active": palette["blue"] + "99",
+        "ghost_element.background": palette["bg1"] + "00",
+        "ghost_element.disabled": palette["bg1"] + "00",
         "ghost_element.hover": palette["blue"] + "66",
         "ghost_element.selected": palette["blue"] + "66",
         "hidden": palette["fg2"],
