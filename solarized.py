@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Constructs themes/solarized.jsonc
+Constructs themes/leo-solarized-theme.jsonc
 
 Notes:
 - Transparency is supported, just append to hex (e.g. `80` for 50%)
@@ -409,7 +409,7 @@ _HEADER = (
     "// Run `make` (uv run python solarized.py) to regenerate.\n"
 )
 
-jsonc_file = "themes/solarized.jsonc"
+jsonc_file = "themes/leo-solarized-theme.jsonc"
 with open(jsonc_file, "w") as solarized_jsonc:
     solarized_jsonc.write(_HEADER)
     json.dump(solarized_dict, solarized_jsonc, indent=2)

@@ -1,5 +1,5 @@
-id = "solarized"
-name = "Solarized"
+id = "leo-solarized-theme"
+name = "Leo-Solarized"
 version = "0.10.0"
 schema_version = 1
 authors = ["HernandoR", "harmtemolder"]

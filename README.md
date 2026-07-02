@@ -42,11 +42,11 @@ etc.), copy the relevant section from
   - Note that `accents`, `players` and `syntax` should be a `list`, `list` and `dict` respectively
 - This is a [`uv`](https://docs.astral.sh/uv/) project; run `uv sync` once to set up the environment (it pulls in `coloraide`, used to compute surface shades — see `docs/plans/adr-0003-computed-surface-ladder-2026-06-26.md`)
 - Make changes to `solarized.py` as you see fit
-- Then run it with `make` (which runs `uv run python solarized.py`) to generate `themes/solarized.jsonc`
+- Then run it with `make` (which runs `uv run python solarized.py`) to generate `themes/leo-solarized-theme.jsonc`
 - Don't forget to increment the version number in `extension.toml` before committing
 - Then update [the `extensions` repo](https://github.com/zed-industries/extensions) (see [docs](https://zed.dev/docs/extensions/developing-extensions#updating-an-extension))
   - Fork the `extensions` repo
-  - `cd extensions/extensions/solarized`
+  - `cd extensions/extensions/leo-solarized-theme`
   - `git fetch`
   - `git pull`
   - Update the version number in `extensions/extensions.toml`
