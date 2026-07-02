@@ -37,7 +37,7 @@ solarized = {
     "green": "#859900",
 }
 
-# Canonical accent hexes, captured before the per-variant vivify transform
+# Canonical accent hexes, captured before the per-variant accent transform
 # (ADR-0005) overwrites the working `solarized` accents.
 _ACCENT_NAMES = (
     "yellow",
@@ -85,47 +85,30 @@ def _from_lch(lightness, chroma, hue):
     return c.convert("srgb").to_string(hex=True)
 
 
-def desaturate(hex_color, factor):
-    """Reduce a color's LCh chroma by `factor` (0 = unchanged, 1 = fully gray),
-    holding lightness and hue. Used to derive muted accents from the canonical
-    Solarized colours (see ADR-0004)."""
-    lightness, chroma, hue = _lch(hex_color)
-    return _from_lch(lightness, chroma * (1.0 - factor), hue)
-
-
 # ---------------------------------------------------------------------------
-# Cleaner, crisper accents (ADR-0005)
+# Cleaner, crisper accents + a legibility lift (ADR-0005)
 #
 # Canonical Solarized accents are deliberately low-chroma and mid-lightness, which
-# reads "灰灰的、暗暗的" (grayish/dark) in the editor. We trade some canonical
-# fidelity for legibility: boost every accent's LCh chroma and shift its lightness
-# away from the background — brighter on dark, darker on light — holding hue. Both
-# knobs are eye-tunable; set the boost to 1.0 and the lift to 0 to restore
-# canonical accents.
+# reads "灰灰的、暗暗的" (grayish/dark). We trade some canonical fidelity for
+# legibility: boost every accent's LCh chroma and shift its lightness away from
+# the background — brighter on dark, darker on light — holding hue. The same
+# LIGHT_LIFT also lifts the comment/emphasized text tones (below). Set the boost
+# to 1.0 and the lift to 0 to restore canonical.
 # ---------------------------------------------------------------------------
 ACCENT_CHROMA_BOOST = 1.30  # ×chroma applied to all 8 accents (both variants)
-ACCENT_LIGHT_LIFT = 8.0  # +L* on dark / −L* on light
-
-
-def vivify(hex_color, light_lift):
-    """Boost an accent's chroma and shift its lightness (ADR-0005), holding hue.
-    light_lift is +on dark / −on light; the chroma boost is shared by both."""
-    lightness, chroma, hue = _lch(hex_color)
-    return _from_lch(
-        min(max(lightness + light_lift, 0.0), 92.0),
-        chroma * ACCENT_CHROMA_BOOST,
-        hue,
-    )
+LIGHT_LIFT = 8.0  # CIELAB L* shift away from bg: + on dark / − on light
 
 
 def apply_accents(light_lift):
-    """Overwrite the 8 accents in `solarized` with their vivified form for one
-    variant, then re-derive `red_muted` (classes/namespaces, ADR-0004) from the
-    vivified red so it stays in the same cleaned-up family. `red` itself stays
-    reserved for errors/diff; red_muted drops ~45% of its chroma."""
+    """Rebuild the 8 accents in `solarized` for one variant — boost chroma and
+    shift lightness, holding hue — then derive `red_muted` for classes/types
+    (ADR-0004) as the vivified red with ~35% of its chroma removed. Vivid `red`
+    itself stays reserved for errors/diff."""
     for name in _ACCENT_NAMES:
-        solarized[name] = vivify(_CANONICAL_ACCENTS[name], light_lift)
-    solarized["red_muted"] = desaturate(solarized["red"], 0.45)
+        lightness, chroma, hue = _lch(_CANONICAL_ACCENTS[name])
+        solarized[name] = _from_lch(lightness + light_lift, chroma * ACCENT_CHROMA_BOOST, hue)
+    r_l, r_c, r_h = _lch(solarized["red"])
+    solarized["red_muted"] = _from_lch(r_l, r_c * 0.65, r_h)
 
 
 # Light backgrounds run a touch warmer (more b*/yellow) than canonical so the
@@ -139,16 +122,9 @@ def warm(hex_color):
     return _from_lab(lightness, a, b + LIGHT_WARM)
 
 
-# Editor/UI text readability lift (eye-tuned). Canonical Solarized content tones
-# (base0/base01/base1) are deliberately low-contrast; this pushes only the three
-# text roles a few CIELAB L* away from the background for legibility — lighter on
-# dark, darker on light — holding hue/chroma so they stay Solarized in tint.
-# Terminal ANSI and surface colours are untouched. Set to 0 to restore canonical.
-TEXT_CONTRAST_LIFT = 8.0
-
-
 def lighten(hex_color, delta_l):
-    """Shift a color's CIELAB lightness by delta_l (negative darkens), holding a*/b*."""
+    """Shift a color's CIELAB lightness by delta_l (negative darkens), holding a*/b*.
+    Used with ±LIGHT_LIFT to lift the comment/emphasized tones off the background."""
     lightness, a, b = _lab(hex_color)
     return _from_lab(lightness + delta_l, a, b)
 
@@ -161,15 +137,14 @@ def lighten(hex_color, delta_l):
 # the vivid accents carry the colour. Comments (fg2) and emphasized (fg3) keep
 # their lifted teal tint so they stay distinct. Both knobs are eye-tunable.
 BODY_L = {"dark": 74.0, "light": 40.0}  # target CIELAB lightness of body text
-BODY_CHROMA_KEEP = 0.30  # fraction of the base tone's a*/b* kept (0 = pure gray)
 
 
 def clean_text(hex_color, target_l):
     """Crisp near-neutral body foreground (ADR-0005): set CIELAB lightness to
-    target_l and scale a*/b* toward neutral by BODY_CHROMA_KEEP, so default text
-    reads clean-white/clean-ink instead of teal-gray."""
+    target_l and scale a*/b* toward neutral (keep 30% of the tint), so default
+    text reads clean-white/clean-ink instead of teal-gray."""
     _, a, b = _lab(hex_color)
-    return _from_lab(target_l, a * BODY_CHROMA_KEEP, b * BODY_CHROMA_KEEP)
+    return _from_lab(target_l, a * 0.30, b * 0.30)
 
 
 # The canvas (editor) and highlight (current line) keep the canonical base03/
@@ -284,16 +259,17 @@ def solarized_theme(palette):
         "function.decorator": {"color": palette["violet"]},
         "constructor": {"color": palette["blue"]},
         # --- Types, classes, namespaces (muted red; interfaces italic) ---
-        # Vivid `red` stays reserved for errors/diff; classes & namespaces use the
-        # desaturated `red_muted` so they read as a calm red family, not an alarm.
+        # Classes/types are plain `red_muted`; namespaces/modules use the same
+        # muted red but bold, so the scope reads as a bolder member of the family.
+        # Vivid `red` stays reserved for errors/diff.
         "type": {"color": palette["red_muted"]},
         "type.definition": {"color": palette["red_muted"]},
         "type.class.definition": {"color": palette["red_muted"]},
         "type.super": {"color": palette["red_muted"]},
         "type.interface": {"color": palette["red_muted"], "font_style": "italic"},
         "interface": {"color": palette["red_muted"], "font_style": "italic"},
-        "namespace": {"color": palette["red_muted"]},
-        "module": {"color": palette["red_muted"]},
+        "namespace": {"color": palette["red_muted"], "font_weight": 700},
+        "module": {"color": palette["red_muted"], "font_weight": 700},
         "concept": {"color": palette["red_muted"]},
         "type.builtin": {
             "color": palette["yellow"]
@@ -546,17 +522,17 @@ solarized.update(
             solarized["base0"], BODY_L["dark"]
         ),  # body text / vars — clean near-white
         "fg2": lighten(
-            solarized["base01"], TEXT_CONTRAST_LIFT
+            solarized["base01"], LIGHT_LIFT
         ),  # comments / secondary content
         "fg3": lighten(
-            solarized["base1"], TEXT_CONTRAST_LIFT
+            solarized["base1"], LIGHT_LIFT
         ),  # optional emphasized content
         "surf_recede": _dark["recede"],  # panels, status bar, popovers (sunken)
         "surf_field": _dark["field"],  # inputs, tab bar, inactive tabs
         "surf_emphasis": _dark["emphasis"],  # active / focused list item
     }
 )
-apply_accents(ACCENT_LIGHT_LIFT)  # cleaner, brighter accents on dark (ADR-0005)
+apply_accents(LIGHT_LIFT)  # cleaner, brighter accents on dark (ADR-0005)
 
 solarized_dark = {
     "appearance": "dark",
@@ -582,17 +558,17 @@ solarized.update(
             solarized["base00"], BODY_L["light"]
         ),  # body text / vars — clean near-ink
         "fg2": lighten(
-            solarized["base1"], -TEXT_CONTRAST_LIFT
+            solarized["base1"], -LIGHT_LIFT
         ),  # comments / secondary content
         "fg3": lighten(
-            solarized["base01"], -TEXT_CONTRAST_LIFT
+            solarized["base01"], -LIGHT_LIFT
         ),  # optional emphasized content
         "surf_recede": _light["recede"],  # panels, status bar, popovers
         "surf_field": _light["field"],  # inputs, tab bar, inactive tabs
         "surf_emphasis": _light["emphasis"],  # active / focused list item
     }
 )
-apply_accents(-ACCENT_LIGHT_LIFT)  # cleaner, darker accents on light (ADR-0005)
+apply_accents(-LIGHT_LIFT)  # cleaner, darker accents on light (ADR-0005)
 
 solarized_light = {
     "appearance": "light",

@@ -286,33 +286,35 @@
             "color": "#00a2f6"
           },
           "type": {
-            "color": "#d26e63"
+            "color": "#dd675b"
           },
           "type.definition": {
-            "color": "#d26e63"
+            "color": "#dd675b"
           },
           "type.class.definition": {
-            "color": "#d26e63"
+            "color": "#dd675b"
           },
           "type.super": {
-            "color": "#d26e63"
+            "color": "#dd675b"
           },
           "type.interface": {
-            "color": "#d26e63",
+            "color": "#dd675b",
             "font_style": "italic"
           },
           "interface": {
-            "color": "#d26e63",
+            "color": "#dd675b",
             "font_style": "italic"
           },
           "namespace": {
-            "color": "#d26e63"
+            "color": "#dd675b",
+            "font_weight": 700
           },
           "module": {
-            "color": "#d26e63"
+            "color": "#dd675b",
+            "font_weight": 700
           },
           "concept": {
-            "color": "#d26e63"
+            "color": "#dd675b"
           },
           "type.builtin": {
             "color": "#cf9d00"
@@ -821,33 +823,35 @@
             "color": "#0079af"
           },
           "type": {
-            "color": "#a04843"
+            "color": "#a9403d"
           },
           "type.definition": {
-            "color": "#a04843"
+            "color": "#a9403d"
           },
           "type.class.definition": {
-            "color": "#a04843"
+            "color": "#a9403d"
           },
           "type.super": {
-            "color": "#a04843"
+            "color": "#a9403d"
           },
           "type.interface": {
-            "color": "#a04843",
+            "color": "#a9403d",
             "font_style": "italic"
           },
           "interface": {
-            "color": "#a04843",
+            "color": "#a9403d",
             "font_style": "italic"
           },
           "namespace": {
-            "color": "#a04843"
+            "color": "#a9403d",
+            "font_weight": 700
           },
           "module": {
-            "color": "#a04843"
+            "color": "#a9403d",
+            "font_weight": 700
           },
           "concept": {
-            "color": "#a04843"
+            "color": "#a9403d"
           },
           "type.builtin": {
             "color": "#9d7500"

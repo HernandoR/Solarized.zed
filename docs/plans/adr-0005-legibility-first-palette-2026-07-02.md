@@ -49,34 +49,35 @@ requests are gamut-mapped on output):
 1. **Body foreground → clean near-neutral.** The default text tone (`fg1`, used by
    `editor.foreground` and plain `variable`/`text`) is set by `clean_text()` to a
    crisp near-white on dark (`BODY_L` 74 → `#b2b7b8`, contrast ≈7.4) / near-ink on
-   light (`BODY_L` 40 → `#595f62`), with its teal tint scaled toward neutral
-   (`BODY_CHROMA_KEEP` 0.30). Because variables are the most frequent token, this
-   fixes the "gray" feel *without* painting them an accent — which would let one
-   colour dominate the screen; the vivid accents carry the colour, the frequent
-   identifiers read clean-white. Comments (`fg2`) and emphasized/UI text (`fg3`)
-   instead keep the `TEXT_CONTRAST_LIFT` (default **8** L\*) lift plus their teal
-   tint, so they recede / stay distinct. Terminal ANSI and surfaces are untouched.
+   light (`BODY_L` 40 → `#595f62`), keeping only ~30% of the base tone's teal tint.
+   Because variables are the most frequent token, this fixes the "gray" feel
+   *without* painting them an accent — which would let one colour dominate; the
+   vivid accents carry the colour, the frequent identifiers read clean-white.
+   Comments (`fg2`) and emphasized/UI text (`fg3`) instead keep the `LIGHT_LIFT`
+   lift plus their teal tint, so they recede / stay distinct. Terminal ANSI and
+   surfaces are untouched.
 
 2. **Accent vivify** — `apply_accents()` rebuilds the eight accents per variant
-   from the captured `_CANONICAL_ACCENTS` via `vivify()`:
-   - `ACCENT_CHROMA_BOOST` (default **×1.50**) — shared by both variants; this is
-     the lever that kills the "muddy/gray" feel. Note most accents are already at
-     the sRGB gamut edge by ≈×1.30, so higher values gamut-map to the same output
-     (×1.50 ≡ ×1.30 for blue/green/cyan/magenta/etc.) — the palette is effectively
-     at maximum representable chroma for these hues.
-   - `ACCENT_LIGHT_LIFT` (default **8** L\*) — directional like the text lift
-     (+dark / −light) so the light variant doesn't wash out.
+   from the captured `_CANONICAL_ACCENTS`:
+   - `ACCENT_CHROMA_BOOST` (default **×1.30**) — shared by both variants; the
+     lever that kills the "muddy/gray" feel. Most accents are already at the sRGB
+     gamut edge by ≈×1.30, so the palette is effectively at maximum representable
+     chroma for these hues (higher boosts just gamut-map to the same output — the
+     knob saturates).
+   - `LIGHT_LIFT` (default **8** L\*) — the single directional lightness lift
+     (+dark / −light), shared by the accents here *and* the comment/emphasized
+     tones above, so the light variant doesn't wash out.
    On dark this yields e.g. blue `#268bd2 → #00a2f6`, cyan `#2aa198 → #00baaf`,
    green `#859900 → #95b000`; accent contrast rises ≈30 %.
 
-3. **`red_muted` re-derived** — the muted red for classes/namespaces (ADR-0004)
-   is now derived from the *vivified* red per variant, so it stays in the same
-   cleaned-up family (dark `#d26e63`). Vivid `red` remains reserved for
-   errors/diff.
+3. **`red_muted` re-derived** — the muted red for classes/types (ADR-0004) is
+   derived inside `apply_accents()` from the *vivified* red (≈35% of its chroma
+   removed), so it stays in the same cleaned-up family. Vivid `red` stays reserved
+   for errors/diff.
 
-4. **Restorable** — set `ACCENT_CHROMA_BOOST = 1.0`, `ACCENT_LIGHT_LIFT = 0`, and
-   `TEXT_CONTRAST_LIFT = 0` to return to canonical Solarized. The knobs are
-   expected to be tuned by eye in Zed (like `LIGHT_WARM` and the surface ladder).
+4. **Restorable** — set `ACCENT_CHROMA_BOOST = 1.0` and `LIGHT_LIFT = 0` to return
+   to canonical Solarized accents and content tones. The knobs are tuned by eye in
+   Zed (like `LIGHT_WARM` and the surface ladder).
 
 ## Consequences
 

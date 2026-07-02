@@ -16,23 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   namespaces, enums, decorators, parameters, members, builtins, …), so rich
   highlighting works out of the box with no `settings.json` and no language
   server. Differentiation is hue-first across the eight Solarized accents plus a
-  derived muted red (`#b45c4f`) for classes/types and namespaces; plain locals
-  fall to body text. Bold/italic are minimized: bold on named constants and enum
-  variants, italic on interfaces (comments and Markdown emphasis/strong keep
-  their conventional styling). See ADR-0004.
+  derived muted red for classes/types and namespaces; plain locals fall to body
+  text. Bold/italic are minimized: bold on named constants, enum variants, and
+  namespaces/modules; italic on interfaces (comments and Markdown emphasis/strong
+  keep their conventional styling). See ADR-0004.
 - `recommended-settings.json` is now optional and trimmed to what tree-sitter
   cannot express: it enables `semantic_tokens` (previously missing, so the rules
   never fired) and dims `@deprecated` symbols. README reframed accordingly.
 - Cleaner, more legible palette (ADR-0005). The editor previously read as
-  grayish/dark; two eye-tunable knobs push it off canonical Solarized while
+  grayish/dark; a few eye-tunable knobs push it off canonical Solarized while
   holding every hue: the body foreground (editor text + plain variables) is set
   to a clean near-neutral instead of the muddy teal-gray base0 (dark `#b2b7b8`,
   light `#595f62`) so frequent identifiers read clean-white rather than gray;
-  comments/emphasized tones are lifted `TEXT_CONTRAST_LIFT` (8 L\*) away from the
-  background; and the eight accents are vivified — `ACCENT_CHROMA_BOOST` (×1.50, at the sRGB
-  gamut ceiling) and `ACCENT_LIGHT_LIFT` (8 L\*, directional). E.g. dark blue
-  `#268bd2 → #00a2f6`, cyan `#2aa198 → #00baaf`. Set the boosts to 1.0/0 to
-  restore canonical. Surface ladder unchanged.
+  comments/emphasized tones and the eight accents are lifted a single directional
+  `LIGHT_LIFT` (8 L\*, + on dark / − on light); and the accents are vivified via
+  `ACCENT_CHROMA_BOOST` (×1.30, at the sRGB gamut ceiling). E.g. dark blue
+  `#268bd2 → #00a2f6`, cyan `#2aa198 → #00baaf`. Set the boost to 1.0 and the lift
+  to 0 to restore canonical. Surface ladder unchanged.
 
 ## [0.10.0] - 2026-06-26
 

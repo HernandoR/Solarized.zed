@@ -64,36 +64,40 @@ mapped and moves the differentiation off the LSP overlay.
 Token families map to Solarized accents by role. Where two families must differ
 but share a natural accent, they are pushed onto an under-used accent rather than
 onto a weight/italic variation. One accent is *derived*, not canonical:
-`red_muted` = Solarized `red` with ~45% of its chroma removed (a dusty brick-red,
-`#b45c4f`), so classes/namespaces read as a calm red family while vivid `red`
-stays reserved for errors and diff-minus.
+`red_muted` = the vivified `red` with ~35% of its chroma removed (a dusty
+brick-red), used for classes/types. Namespaces/modules use the **same** muted red
+but **bold**, so the scope reads as a bolder member of the type family; vivid
+`red` stays reserved for errors and diff-minus.
 
 | Accent | Role / families |
 |---|---|
 | **green** | keywords (all `keyword.*`), operators, CSS selector, `tag.doctype`, `diff.plus` |
 | **blue** | functions / methods / constructors / calls, `tag`, `selector.pseudo`, `string.special.url`, `link_text` |
-| **red_muted** *(derived)* | **classes / types** (`type`, `type.definition`, `type.class.definition`, `type.super`), **interfaces** (`type.interface`, `interface`; italic), **namespaces / modules / concepts** |
+| **red_muted** *(derived)* | **classes / types** (`type`, `type.definition`, `type.class.definition`, `type.super`, `concept`), **interfaces** (`type.interface`, `interface`; italic), **namespaces / modules** (bold) |
+| **red** (vivid) | `comment.error`, `diff.minus` |
 | **orange** | `enum`, preproc / macros / directives, `string.escape` / `.regex` / `.special`, `punctuation.list_marker`, `title` |
 | **cyan** | strings, object members / `property` / `field`, `function.builtin`, characters, `text.literal`, `tag.attribute` |
 | **magenta** | numbers, **named constants (bold)**, **enum variants (bold)** |
 | **yellow** | booleans, `constant.builtin` (bold), `type.builtin`, |
 | **violet** | parameters, decorators / `attribute`, labels, symbols, `link_uri`, `punctuation.special`, `variable.builtin`/`.special` |
-| **red** (vivid) | `comment.error`, `diff.minus` |
 | **fg1** (body) | plain `variable`, `text`, `primary`, `embedded` |
 | **fg2** (muted) | comments, ordinary punctuation, `tag.delimiter` |
 
-Key consequences: **classes/types & namespaces share the muted red** (with
+Key consequences: **classes/types read muted red; namespaces/modules read the
+same muted red but bold** to separate the scope from the types inside it (with
 builtin types kept on yellow and enums on orange so they stay distinguishable
 from user classes); **plain local variables render as body text**, so the
 coloured accents mark only semantically meaningful tokens (a call site pops blue;
-a member access pops cyan; a class reads muted-red; a local recedes).
+a member access pops cyan; a class reads muted-red; a namespace reads bold; a
+local recedes).
 
 ### 2. Bold and italic are minimized to carry specific meaning
 
 Not used as a general differentiation axis. Only:
 
 - **Bold (700)** — *named immutable values*: `constant`, `constant.builtin`,
-  `constant.macro`, `variant` (enum variants). Nothing else in code is bold.
+  `constant.macro`, `variant` (enum variants); plus **`namespace`/`module`** (to
+  lift the scope out of the code around it). Nothing else in code is bold.
 - **Italic** — *interfaces*: `type.interface`, `interface`. Nothing else in code
   is italic.
 
