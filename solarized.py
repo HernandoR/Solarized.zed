@@ -365,10 +365,14 @@ solarized.update(
 
 solarized_dark = {
     "appearance": "dark",
-    "name": "Solarized Dark",
+    # Prefixed with the family name so these variants don't collide with the
+    # separate `solarized` extension, which also ships "Solarized Dark"/"Light".
+    # Zed selects themes by this name string, so a shared name would make the
+    # two extensions indistinguishable once both are installed.
+    "name": "Leo-Solarized Dark",
     "style": solarized_theme(solarized),
 }
-print("Added Solarized Dark")
+print("Added Leo-Solarized Dark")
 
 # =========================================================================
 # Light
@@ -390,10 +394,10 @@ solarized.update(
 
 solarized_light = {
     "appearance": "light",
-    "name": "Solarized Light",
+    "name": "Leo-Solarized Light",
     "style": solarized_theme(solarized),
 }
-print("Added Solarized Light")
+print("Added Leo-Solarized Light")
 
 solarized_dict = {
     "$schema": "https://zed.dev/schema/themes/v0.2.0.json",

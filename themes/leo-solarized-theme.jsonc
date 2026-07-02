@@ -7,7 +7,7 @@
   "themes": [
     {
       "appearance": "dark",
-      "name": "Solarized Dark",
+      "name": "Leo-Solarized Dark",
       "style": {
         "accents": [
           "#268bd2"
@@ -320,7 +320,7 @@
     },
     {
       "appearance": "light",
-      "name": "Solarized Light",
+      "name": "Leo-Solarized Light",
       "style": {
         "accents": [
           "#268bd2"
