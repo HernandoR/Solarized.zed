@@ -3,9 +3,9 @@
 > ☯️ Precision colors for machines and people
 
 This is a fork of [harmtemolder/Solarized.zed](https://github.com/harmtemolder/Solarized.zed)
-that fine-tunes the color system and expands the thematic (semantic) token
-setup so highlighting can follow your LSP more closely — see
-[Color & theme adjustments](#color--theme-adjustments) below.
+that fine-tunes the color system and expands the syntax map so many more token
+classes are distinguished directly by the theme — with no LSP or settings
+required — see [Color & theme adjustments](#color--theme-adjustments) below.
 
 ## Issues
 
@@ -23,18 +23,23 @@ This fork diverges from upstream in two main ways:
   inputs, tabs and focus rings are derived on a held chroma; the light variant
   gains a matching surface hierarchy on a warm-cream base. See
   [`docs/plans/`](docs/plans/) for the ADRs behind these changes.
-- **Expanded thematic token setup.** [`recommended-settings.json`](recommended-settings.json)
-  maps LSP semantic token types (classes, namespaces, enums, decorators,
-  parameters, properties, deprecated symbols, etc.) onto the Solarized syntax
-  palette, so applying the recommended config gives you richer, more flexible
-  highlighting that tracks the language server rather than tree-sitter alone.
+- **Theme-native syntax differentiation.** The theme maps a full, fine-grained
+  set of tree-sitter capture names (classes, namespaces, enums, decorators,
+  parameters, members, builtins, …) directly onto the Solarized accents, so
+  rich, differentiated highlighting works out of the box — no `settings.json`
+  and no language server required. Classes/types and namespaces get a dedicated
+  muted red; plain locals stay body-text so the accents mark only meaningful
+  tokens. Bold/italic are minimized (bold = named constants & enum variants,
+  italic = interfaces + the usual comments/Markdown). See
+  [ADR-0004](docs/plans/adr-0004-theme-native-syntax-differentiation-2026-07-02.md).
 
-## Recommended settings
+## Optional settings
 
-For best results with LSP semantic tokens (class names, namespaces, decorators,
-etc.), copy the relevant section from
-[`recommended-settings.json`](recommended-settings.json) into your
-`~/.config/zed/settings.json`.
+The theme needs no configuration to get the full syntax palette described above.
+[`recommended-settings.json`](recommended-settings.json) is purely optional: it
+turns on LSP semantic tokens and dims `@deprecated` symbols — a semantic fact
+tree-sitter cannot see. Copy it into your `~/.config/zed/settings.json` only if
+you want that extra.
 
 ## Develop
 

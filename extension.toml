@@ -1,6 +1,6 @@
 id = "leo-solarized-theme"
 name = "Leo-Solarized"
-version = "0.10.0"
+version = "0.11.0"
 schema_version = 1
 authors = ["HernandoR", "harmtemolder"]
 description = "☯️ Precision colors for machines and people"

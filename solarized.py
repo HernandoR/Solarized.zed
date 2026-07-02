@@ -37,6 +37,20 @@ solarized = {
     "green": "#859900",
 }
 
+# Canonical accent hexes, captured before the per-variant vivify transform
+# (ADR-0005) overwrites the working `solarized` accents.
+_ACCENT_NAMES = (
+    "yellow",
+    "orange",
+    "red",
+    "magenta",
+    "violet",
+    "blue",
+    "cyan",
+    "green",
+)
+_CANONICAL_ACCENTS = {n: solarized[n] for n in _ACCENT_NAMES}
+
 # ---------------------------------------------------------------------------
 # Derived surface shades (ADR-0003)
 #
@@ -45,7 +59,8 @@ solarized = {
 # They are replaced by a computed ladder: every background surface shares ONE
 # chroma (the variant's background hue) and differs only in CIELAB lightness, on
 # a uniform step grid — so the contrast between any two surfaces is consistent.
-# Foreground/content tones and the 8 accents stay canonical Solarized.
+# The 8 accents are cleaned up (chroma/lightness) per ADR-0005 and the content
+# tones lifted for legibility; only the background surfaces are canonical here.
 # ---------------------------------------------------------------------------
 
 
@@ -70,6 +85,49 @@ def _from_lch(lightness, chroma, hue):
     return c.convert("srgb").to_string(hex=True)
 
 
+def desaturate(hex_color, factor):
+    """Reduce a color's LCh chroma by `factor` (0 = unchanged, 1 = fully gray),
+    holding lightness and hue. Used to derive muted accents from the canonical
+    Solarized colours (see ADR-0004)."""
+    lightness, chroma, hue = _lch(hex_color)
+    return _from_lch(lightness, chroma * (1.0 - factor), hue)
+
+
+# ---------------------------------------------------------------------------
+# Cleaner, crisper accents (ADR-0005)
+#
+# Canonical Solarized accents are deliberately low-chroma and mid-lightness, which
+# reads "灰灰的、暗暗的" (grayish/dark) in the editor. We trade some canonical
+# fidelity for legibility: boost every accent's LCh chroma and shift its lightness
+# away from the background — brighter on dark, darker on light — holding hue. Both
+# knobs are eye-tunable; set the boost to 1.0 and the lift to 0 to restore
+# canonical accents.
+# ---------------------------------------------------------------------------
+ACCENT_CHROMA_BOOST = 1.30  # ×chroma applied to all 8 accents (both variants)
+ACCENT_LIGHT_LIFT = 8.0  # +L* on dark / −L* on light
+
+
+def vivify(hex_color, light_lift):
+    """Boost an accent's chroma and shift its lightness (ADR-0005), holding hue.
+    light_lift is +on dark / −on light; the chroma boost is shared by both."""
+    lightness, chroma, hue = _lch(hex_color)
+    return _from_lch(
+        min(max(lightness + light_lift, 0.0), 92.0),
+        chroma * ACCENT_CHROMA_BOOST,
+        hue,
+    )
+
+
+def apply_accents(light_lift):
+    """Overwrite the 8 accents in `solarized` with their vivified form for one
+    variant, then re-derive `red_muted` (classes/namespaces, ADR-0004) from the
+    vivified red so it stays in the same cleaned-up family. `red` itself stays
+    reserved for errors/diff; red_muted drops ~45% of its chroma."""
+    for name in _ACCENT_NAMES:
+        solarized[name] = vivify(_CANONICAL_ACCENTS[name], light_lift)
+    solarized["red_muted"] = desaturate(solarized["red"], 0.45)
+
+
 # Light backgrounds run a touch warmer (more b*/yellow) than canonical so the
 # base reads as warm cream, not stark white. +3 keeps every tone inside sRGB.
 LIGHT_WARM = 3.0
@@ -79,6 +137,39 @@ def warm(hex_color):
     """Nudge a color warmer (more b*) — used to cream up the light base tones."""
     lightness, a, b = _lab(hex_color)
     return _from_lab(lightness, a, b + LIGHT_WARM)
+
+
+# Editor/UI text readability lift (eye-tuned). Canonical Solarized content tones
+# (base0/base01/base1) are deliberately low-contrast; this pushes only the three
+# text roles a few CIELAB L* away from the background for legibility — lighter on
+# dark, darker on light — holding hue/chroma so they stay Solarized in tint.
+# Terminal ANSI and surface colours are untouched. Set to 0 to restore canonical.
+TEXT_CONTRAST_LIFT = 8.0
+
+
+def lighten(hex_color, delta_l):
+    """Shift a color's CIELAB lightness by delta_l (negative darkens), holding a*/b*."""
+    lightness, a, b = _lab(hex_color)
+    return _from_lab(lightness + delta_l, a, b)
+
+
+# Body foreground (editor text + plain variables) is set to a CLEAN near-neutral
+# rather than the muddy teal-gray base0/base00 (ADR-0005, "clean near-white").
+# Variables are the most frequent token, so painting them an accent would make
+# that accent dominate; instead we brighten the default text toward a crisp
+# near-white (dark) / near-ink (light) and scale its tint toward neutral, letting
+# the vivid accents carry the colour. Comments (fg2) and emphasized (fg3) keep
+# their lifted teal tint so they stay distinct. Both knobs are eye-tunable.
+BODY_L = {"dark": 74.0, "light": 40.0}  # target CIELAB lightness of body text
+BODY_CHROMA_KEEP = 0.30  # fraction of the base tone's a*/b* kept (0 = pure gray)
+
+
+def clean_text(hex_color, target_l):
+    """Crisp near-neutral body foreground (ADR-0005): set CIELAB lightness to
+    target_l and scale a*/b* toward neutral by BODY_CHROMA_KEEP, so default text
+    reads clean-white/clean-ink instead of teal-gray."""
+    _, a, b = _lab(hex_color)
+    return _from_lab(target_l, a * BODY_CHROMA_KEEP, b * BODY_CHROMA_KEEP)
 
 
 # The canvas (editor) and highlight (current line) keep the canonical base03/
@@ -135,18 +226,140 @@ def solarized_theme(palette):
             "yellow",
         ]
     ]
+    # Syntax highlighting — see docs/plans/adr-0004-theme-native-syntax-
+    # differentiation-2026-07-02.md. Differentiation is hue-first across all
+    # eight Solarized accents (Zed maps these tree-sitter capture names directly,
+    # always-on, with no LSP or user settings required). Bold/italic are
+    # deliberately minimized: bold ONLY on named immutable values (constants and
+    # enum variants), italic ONLY on interfaces — plus the pre-existing markup/
+    # convention uses (comments, Markdown emphasis/strong/title, links) where the
+    # style IS the meaning. Plain locals fall to body text so accents mark only
+    # semantically meaningful tokens.
     syntax = {
-        "attribute": {"color": palette["fg3"]},
-        "boolean": {"color": palette["yellow"]},
+        # --- Comments (muted; italic is the one kept Solarized convention) ---
         "comment": {"color": palette["fg2"], "font_style": "italic"},
         "comment.doc": {"color": palette["fg2"], "font_style": "italic"},
-        "constant": {"color": palette["cyan"]},
-        "constructor": {"color": palette["blue"]},
-        "embedded": {"color": palette["fg1"]},
-        "emphasis": {"color": palette["blue"]},
-        "emphasis.strong": {"color": palette["blue"], "font_weight": 700},
-        "enum": {"color": palette["orange"]},
+        "comment.documentation": {"color": palette["fg2"], "font_style": "italic"},
+        "comment.todo": {"color": palette["yellow"], "font_style": "italic"},
+        "comment.note": {"color": palette["blue"], "font_style": "italic"},
+        "comment.info": {"color": palette["blue"], "font_style": "italic"},
+        "comment.hint": {"color": palette["cyan"], "font_style": "italic"},
+        "comment.warning": {"color": palette["orange"], "font_style": "italic"},
+        "comment.warn": {"color": palette["orange"], "font_style": "italic"},
+        "comment.error": {"color": palette["red"], "font_style": "italic"},
+        # --- Keywords & operators (green) ---
+        "keyword": {"color": palette["green"]},
+        "keyword.conditional": {"color": palette["green"]},
+        "keyword.conditional.ternary": {"color": palette["green"]},
+        "keyword.repeat": {"color": palette["green"]},
+        "keyword.return": {"color": palette["green"]},
+        "keyword.exception": {"color": palette["green"]},
+        "keyword.coroutine": {"color": palette["green"]},
+        "keyword.debug": {"color": palette["green"]},
+        "keyword.function": {"color": palette["green"]},
+        "keyword.operator": {"color": palette["green"]},
+        "keyword.modifier": {"color": palette["green"]},
+        "keyword.import": {"color": palette["green"]},
+        "keyword.export": {"color": palette["green"]},
+        "keyword.type": {"color": palette["green"]},
+        "keyword.directive": {"color": palette["orange"]},
+        "keyword.directive.define": {"color": palette["orange"]},
+        "operator": {"color": palette["green"]},
+        # --- Punctuation (muted; interpolation/markup specials violet) ---
+        "punctuation": {"color": palette["fg2"]},
+        "punctuation.bracket": {"color": palette["fg2"]},
+        "punctuation.delimiter": {"color": palette["fg2"]},
+        "punctuation.list_marker": {"color": palette["orange"]},
+        "punctuation.special": {"color": palette["violet"]},
+        "punctuation.markup": {"color": palette["violet"]},
+        # --- Functions & callables (blue; builtins cyan, macros orange) ---
         "function": {"color": palette["blue"]},
+        "function.call": {"color": palette["blue"]},
+        "function.method": {"color": palette["blue"]},
+        "function.method.call": {"color": palette["blue"]},
+        "method": {"color": palette["blue"]},
+        "function.builtin": {"color": palette["cyan"]},
+        "function.macro": {"color": palette["orange"]},
+        "macro": {"color": palette["orange"]},
+        "function.decorator": {"color": palette["violet"]},
+        "constructor": {"color": palette["blue"]},
+        # --- Types, classes, namespaces (muted red; interfaces italic) ---
+        # Vivid `red` stays reserved for errors/diff; classes & namespaces use the
+        # desaturated `red_muted` so they read as a calm red family, not an alarm.
+        "type": {"color": palette["red_muted"]},
+        "type.definition": {"color": palette["red_muted"]},
+        "type.class.definition": {"color": palette["red_muted"]},
+        "type.super": {"color": palette["red_muted"]},
+        "type.interface": {"color": palette["red_muted"], "font_style": "italic"},
+        "interface": {"color": palette["red_muted"], "font_style": "italic"},
+        "namespace": {"color": palette["red_muted"]},
+        "module": {"color": palette["red_muted"]},
+        "concept": {"color": palette["red_muted"]},
+        "type.builtin": {
+            "color": palette["yellow"]
+        },  # builtin/primitive types stay apart
+        "enum": {"color": palette["orange"]},  # enums kept distinct from classes
+        "label": {"color": palette["violet"]},
+        # --- Literal values. Bold marks NAMED immutable values only:
+        #     user constants and enum variants (not anonymous number/bool literals).
+        "number": {"color": palette["magenta"]},
+        "number.float": {"color": palette["magenta"]},
+        "float": {"color": palette["magenta"]},
+        "integer": {"color": palette["magenta"]},
+        "boolean": {"color": palette["yellow"]},
+        "constant": {"color": palette["magenta"], "font_weight": 700},
+        "constant.builtin": {"color": palette["yellow"], "font_weight": 700},
+        "constant.macro": {"color": palette["orange"], "font_weight": 700},
+        "variant": {"color": palette["magenta"], "font_weight": 700},
+        "character": {"color": palette["cyan"]},
+        "character.special": {"color": palette["cyan"]},
+        # --- Variables, members, parameters ---
+        "variable": {"color": palette["fg1"]},  # plain locals fall to body text
+        "variable.builtin": {"color": palette["violet"]},  # self / this / super
+        "variable.special": {"color": palette["violet"]},
+        "variable.member": {"color": palette["cyan"]},
+        "property": {"color": palette["cyan"]},
+        "field": {"color": palette["cyan"]},
+        "parameter": {"color": palette["violet"]},
+        "variable.parameter": {"color": palette["violet"]},
+        # --- Strings (cyan; escapes/regex/special orange) ---
+        "string": {"color": palette["cyan"]},
+        "string.doc": {"color": palette["cyan"]},
+        "string.documentation": {"color": palette["cyan"]},
+        "string.escape": {"color": palette["orange"]},
+        "string.regex": {"color": palette["orange"]},
+        "string.regexp": {"color": palette["orange"]},
+        "string.special": {"color": palette["orange"]},
+        "string.special.symbol": {"color": palette["violet"]},
+        "string.special.path": {"color": palette["cyan"]},
+        "string.special.url": {"color": palette["blue"]},
+        "symbol": {"color": palette["violet"]},
+        "preproc": {"color": palette["orange"]},
+        # --- Markup (semantic; italic/bold kept because they ARE the meaning) ---
+        "title": {"color": palette["orange"], "font_weight": 700},
+        "emphasis": {"color": palette["fg1"], "font_style": "italic"},
+        "emphasis.strong": {"color": palette["fg1"], "font_weight": 700},
+        "link_text": {"color": palette["blue"], "font_style": "italic"},
+        "link_uri": {"color": palette["violet"]},
+        "text": {"color": palette["fg1"]},
+        "text.literal": {"color": palette["cyan"]},
+        "primary": {"color": palette["fg1"]},
+        "embedded": {"color": palette["fg1"]},
+        # --- Tags / markup structure (HTML, JSX) ---
+        "tag": {"color": palette["blue"]},
+        "tag.attribute": {"color": palette["cyan"]},
+        "tag.delimiter": {"color": palette["fg2"]},
+        "tag.doctype": {"color": palette["green"]},
+        # --- CSS selectors ---
+        "selector": {"color": palette["green"]},
+        "selector.pseudo": {"color": palette["blue"]},
+        # --- Attributes / decorators / annotations (violet) ---
+        "attribute": {"color": palette["violet"]},
+        "decorator": {"color": palette["violet"]},
+        # --- Diff ---
+        "diff.plus": {"color": palette["green"]},
+        "diff.minus": {"color": palette["red"]},
+        # --- Zed runtime keys (not tree-sitter captures) ---
         # Inlay hints read both fg and bg from syntax.hint (Zed PR #36219 moved
         # them off the top-level hint.* status keys). background_color is what
         # the inlay_hints.show_background setting renders. It is a semi-transparent
@@ -157,35 +370,10 @@ def solarized_theme(palette):
             "color": palette["fg2"],
             "background_color": palette["fg3"] + "20",
         },
-        "keyword": {"color": palette["green"]},
-        "label": {"color": palette["blue"]},
-        "link_text": {"color": palette["blue"], "font_style": "italic"},
-        "link_uri": {"color": palette["violet"]},
-        "number": {"color": palette["magenta"]},
-        "operator": {"color": palette["green"]},
         "predictive": {
             "background_color": palette["bg1"],
             "color": palette["magenta"],
         },
-        "preproc": {"color": palette["orange"]},
-        "primary": {"color": palette["fg1"]},
-        "property": {"color": palette["blue"]},
-        "punctuation": {"color": palette["fg2"]},
-        "punctuation.bracket": {"color": palette["fg2"]},
-        "punctuation.delimiter": {"color": palette["fg2"]},
-        "punctuation.list_marker": {"color": palette["fg2"]},
-        "punctuation.special": {"color": palette["fg2"]},
-        "string": {"color": palette["cyan"]},
-        "string.escape": {"color": palette["fg2"]},
-        "string.regex": {"color": palette["orange"]},
-        "string.special": {"color": palette["orange"]},
-        "string.special.symbol": {"color": palette["orange"]},
-        "tag": {"color": palette["blue"]},
-        "text.literal": {"color": palette["cyan"]},
-        "title": {"color": palette["orange"], "font_weight": 700},
-        "type": {"color": palette["orange"]},
-        "variable": {"color": palette["blue"]},
-        "variant": {"color": palette["blue"]},
     }
 
     theme = {
@@ -354,14 +542,21 @@ solarized.update(
     {
         "bg1": solarized["base03"],  # editor / canvas
         "bg2": solarized["base02"],  # active line / hover highlight
-        "fg1": solarized["base0"],  # body text / default code / primary content
-        "fg2": solarized["base01"],  # comments / secondary content
-        "fg3": solarized["base1"],  # optional emphasized content
+        "fg1": clean_text(
+            solarized["base0"], BODY_L["dark"]
+        ),  # body text / vars — clean near-white
+        "fg2": lighten(
+            solarized["base01"], TEXT_CONTRAST_LIFT
+        ),  # comments / secondary content
+        "fg3": lighten(
+            solarized["base1"], TEXT_CONTRAST_LIFT
+        ),  # optional emphasized content
         "surf_recede": _dark["recede"],  # panels, status bar, popovers (sunken)
         "surf_field": _dark["field"],  # inputs, tab bar, inactive tabs
         "surf_emphasis": _dark["emphasis"],  # active / focused list item
     }
 )
+apply_accents(ACCENT_LIGHT_LIFT)  # cleaner, brighter accents on dark (ADR-0005)
 
 solarized_dark = {
     "appearance": "dark",
@@ -383,14 +578,21 @@ solarized.update(
     {
         "bg1": warm(solarized["base3"]),  # editor / canvas (warm cream, not white)
         "bg2": warm(solarized["base2"]),  # active line / hover highlight
-        "fg1": solarized["base00"],  # body text / default code / primary content
-        "fg2": solarized["base1"],  # comments / secondary content
-        "fg3": solarized["base01"],  # optional emphasized content
+        "fg1": clean_text(
+            solarized["base00"], BODY_L["light"]
+        ),  # body text / vars — clean near-ink
+        "fg2": lighten(
+            solarized["base1"], -TEXT_CONTRAST_LIFT
+        ),  # comments / secondary content
+        "fg3": lighten(
+            solarized["base01"], -TEXT_CONTRAST_LIFT
+        ),  # optional emphasized content
         "surf_recede": _light["recede"],  # panels, status bar, popovers
         "surf_field": _light["field"],  # inputs, tab bar, inactive tabs
         "surf_emphasis": _light["emphasis"],  # active / focused list item
     }
 )
+apply_accents(-ACCENT_LIGHT_LIFT)  # cleaner, darker accents on light (ADR-0005)
 
 solarized_light = {
     "appearance": "light",
